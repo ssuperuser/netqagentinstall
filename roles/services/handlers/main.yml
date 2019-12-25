@@ -1,0 +1,25 @@
+- name: enable netq agent and netqd in mgmt
+  command: "{{ item }}"
+  become: yes
+  with_items:
+    - 'systemctl stop netq-agent.service'
+    - 'systemctl disable netq-agent.service'
+    - 'systemctl enable netq-agent@mgmt.service'
+    - 'systemctl start netq-agent@mgmt.service'
+    - 'systemctl stop netqd.service'
+    - 'systemctl disable netqd.service'
+    - 'systemctl enable netqd@mgmt.service'
+    - 'systemctl start netqd@mgmt.service'
+    - 'netq config add agent server 192.168.1.160 vrf mgmt'
+    - 'netq config add cli server 192.168.1.160 vrf mgmt'
+    - 'netq config restart cli'
+    - 'netq config restart agent'
+
+- name: Apt autoremove
+  command: apt-get autoremove -y
+  changed_when: no
+  become: yes
+
+- name: Clean up the downloaded debs
+  shell: "rm -rf /var/tmp/*.deb"
+  become: yes

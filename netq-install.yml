@@ -1,0 +1,86 @@
+---
+- name: run it on these hosts 
+  hosts: spines:leafs
+  vars: 
+    currentnetqagentversion : ''
+    currentnetqappsversion : ''
+
+
+
+  tasks: 
+    - name: "getting the list of current packages installed on switch"
+      package_facts:
+      manager: "auto"
+      when: not ansible_check_mode
+
+    - name: Check the current netq-agent package version 
+      command: "echo {{ ansible_facts.packages['netq-agent'] | json_query('[].version') }}"
+      register: currentnetqagentversion
+      when: not ansible_check_mode
+    - name: Check the current netq-apps package version 
+      command: "echo {{ ansible_facts.packages['netq-apps'] | json_query('[].version') }}"
+      register: currentnetqappsversion
+      when: not ansible_check_mode
+    - debug: 
+        msg: "{{ currentnetqagentversion.stdout }}"
+
+    - name: Copy Netq 2.3 files to switch amd64 version 
+      get_url:
+        url: "http://192.168.1.89/netq/2.3/{{ item }}"
+        dest: "/var/tmp/{{ item }}"
+      with_items:
+         - netq-agent_2.3.1-cl3u22~1572981312.a5896e7_amd64.deb
+         - netq-apps_2.3.1-cl3u22~1572981312.a5896e7_amd64.deb
+      when: 
+        - currentnetqagentversion.stdout != "[u2.3.1-cl3u22~1572981312.a5896e7]" or currentnetqappsversion.stdout != "[u2.3.1-cl3u22~1572981312.a5896e7]"
+        - not ansible_check_mode
+        - ansible_architecture == "x86_64"
+
+
+    - name: Copy Netq 2.3 files to switch arm version 
+      get_url:
+        url: "http://192.168.1.89/netq/2.3/{{ item }}"
+        dest: "/var/tmp/{{ item }}"
+      with_items:
+         - netq-agent_2.3.1-cl3u22~1572981382.a5896e7_armel.deb
+         - netq-apps_2.3.1-cl3u22~1572981382.a5896e7_armel.deb
+      when: 
+        - currentnetqagentversion.stdout != "[u2.3.1-cl3u22~1572981382.a5896e7]" or currentnetqappsversion.stdout != "[u2.3.1-cl3u22~1572981382.a5896e7]"
+        - not ansible_check_mode
+        - ansible_architecture == "armv7l"
+
+    - name: Install netq package amd64 version 
+      shell: "dpkg -i /var/tmp/*.deb"
+      become: yes
+      when:
+        - currentnetqagentversion.stdout != "[u2.3.1-cl3u22~1572981312.a5896e7]" or currentnetqappsversion.stdout != "[u2.3.1-cl3u22~1572981312.a5896e7]"
+        - not ansible_check_mode
+        - ansible_architecture == "x86_64"
+
+    - name: Install netq package arm version 
+      shell: "dpkg -i /var/tmp/*.deb"
+      become: yes
+      when:
+        - currentnetqagentversion.stdout != "[u2.3.1-cl3u22~1572981382.a5896e7]" or currentnetqappsversion.stdout != "[u2.3.1-cl3u22~1572981382.a5896e7]"
+        - not ansible_check_mode
+        - ansible_architecture == "armv7l"
+
+        netq config add agent server 192.168.1.160
+        ## then restart agent 
+        netq config restart agent
+        ## notify o restart 
+         netq config restart cli
+#root@davinder81cumulus:~# netq config add agent server 192.168.1.160
+#Updated agent server 192.168.1.160 vrf default. Please restart netq-agent (netq config restart agent)
+#root@davinder81cumulus:~# netq config restart agent
+#Restarting netq-agent... Success!
+#root@davinder81cumulus:~# netq config restart cli
+#Restarting NetQ CLI... Success!
+#root@davinder81cumulus:~# netq show agents
+
+#Matching agents records:
+#Hostname          Status           NTP Sync Version                              Sys Uptime                Agent Uptime              Reinitialize Time          Last Changed
+#----------------- ---------------- -------- ------------------------------------ ------------------------- ------------------------- -------------------------- -------------------------
+#davinder81cumulus Fresh            yes      2.3.1-cl3u22~1572981312.a5896e7      1d:1h:55m:15s             8m:20.404s                8m:20.405s                 Wed Dec 25 00:43:24 2019
+#leaf01            Rotten           yes      2.3.1-cl3u22~1572981312.a5896e7      27d:18h:14m:10s           27d:18h:13m:44s           27d:18h:13m:44s            Wed Nov 27 08:11:54 2019
+#root@davinder81cumulus:~#

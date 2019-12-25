@@ -1,0 +1,4 @@
+- hosts: spines:leafs ##Applies to ilo and prod
+  gather_facts: yes
+  roles:
+    - { role: 'services', tags: 'user_compliance' }
