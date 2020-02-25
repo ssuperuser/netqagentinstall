@@ -14,36 +14,36 @@
 - debug: 
     msg: "{{ currentnetqagentversion.stdout }}"
 
-- name: Copy Netq 2.3 files to switch amd64 version 
+- name: Copy Netq 2.4 files to switch amd64 version
   get_url:
-    url: "http://192.168.1.89/netq/2.3/{{ item }}"
+    url: "http://192.168.1.89/netq/2.4/{{ item }}"
     dest: "/var/tmp/{{ item }}"
   with_items:
-     - netq-agent_2.3.1-cl3u22~1572981312.a5896e7_amd64.deb
-     - netq-apps_2.3.1-cl3u22~1572981312.a5896e7_amd64.deb
-  when: 
-    - currentnetqagentversion.stdout != "[u2.3.1-cl3u22~1572981312.a5896e7]" or currentnetqappsversion.stdout != "[u2.3.1-cl3u22~1572981312.a5896e7]"
+     - netq-agent_2.4.1-cl3u26_1581350537.c5ec3e5_amd64.deb
+     - netq-apps_2.4.1-cl3u26_1581350537.c5ec3e5_amd64.deb
+  when:
+    - currentnetqagentversion.stdout != "[u2.4.1-cl3u26_1581350537.c5ec3e5]" or currentnetqappsversion.stdout != "[u2.4.1-cl3u26_1581350537.c5ec3e5]"
     - not ansible_check_mode
     - ansible_architecture == "x86_64"
 
 
-- name: Copy Netq 2.3 files to switch arm version 
+- name: Copy Netq 2.3 files to switch arm version
   get_url:
-    url: "http://192.168.1.89/netq/2.3/{{ item }}"
+    url: "http://192.168.1.89/netq/2.4/{{ item }}"
     dest: "/var/tmp/{{ item }}"
   with_items:
-     - netq-agent_2.3.1-cl3u22~1572981382.a5896e7_armel.deb
+     - netq-agent_2.4.1-cl3u26_1581350537.c5ec3e5_amd64.debXX
      - netq-apps_2.3.1-cl3u22~1572981382.a5896e7_armel.deb
-  when: 
+  when:
     - currentnetqagentversion.stdout != "[u2.3.1-cl3u22~1572981382.a5896e7]" or currentnetqappsversion.stdout != "[u2.3.1-cl3u22~1572981382.a5896e7]"
     - not ansible_check_mode
     - ansible_architecture == "armv7l"
 
-- name: Install netq package amd64 version 
+- name: Install netq package amd64 version
   shell: "dpkg -i /var/tmp/*.deb"
   become: yes
   when:
-    - currentnetqagentversion.stdout != "[u2.3.1-cl3u22~1572981312.a5896e7]" or currentnetqappsversion.stdout != "[u2.3.1-cl3u22~1572981312.a5896e7]"
+    - currentnetqagentversion.stdout != "[u2.4.1-cl3u26_1581350537.c5ec3e5]" or currentnetqappsversion.stdout != "[u2.4.1-cl3u26_1581350537.c5ec3e5]"
     - not ansible_check_mode
     - ansible_architecture == "x86_64"
   notify: 
